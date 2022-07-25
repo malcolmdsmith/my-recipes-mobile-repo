@@ -7,7 +7,6 @@ import {
   Modal,
   ImageBackground,
   TextInput,
-  Platform,
 } from "react-native";
 const { forEach } = require("p-iteration");
 
@@ -35,12 +34,11 @@ import { getCurrentUser } from "../api/userApi";
 import ActivityIndicator from "../components/ActivityIndicator";
 import colors from "../config/colors";
 import routes from "../navigation/routes";
-import localStorage from "@react-native-async-storage/async-storage";
 import ShoppingItemEditor from "../components/ShoppingItemEditor";
 import ShoppingListHeader from "../components/ShoppingListHeader";
 import ShoppingListTotalPanel from "../components/ShoppingListTotalPanel";
 
-export default function ShoppingListScreen({ route, navigation }) {
+export default function ShoppingListScreen({ navigation }) {
   const [item, setItem] = useState({});
   const [masterItems, setMasterItems] = useState([]);
   const [listItems, setListItems] = useState([]);
@@ -56,15 +54,16 @@ export default function ShoppingListScreen({ route, navigation }) {
   const [selectedShoppingList, setSelectedShoppingList] = useState("");
   const [shoplistTextInput, setShopListTextInput] = useState("");
 
-  useState("fortnightly");
+  console.info("dfdfdff");
 
   useEffect(() => {
+    console.info("useEffect...");
     (async () => await loadScreen())();
   }, []);
 
   const loadScreen = async () => {
     try {
-      //
+      console.info("loadScreen...");
 
       setLoading(true);
       const user = await getCurrentUser();

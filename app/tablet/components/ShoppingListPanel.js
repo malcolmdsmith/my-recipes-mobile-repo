@@ -63,6 +63,7 @@ export default ShoppingListPanel = () => {
 
   const loadItems = async (shoplist) => {
     try {
+      console.info("loadItems...");
       setLoading(true);
       const user = await getCurrentUser();
       setUser(user);
@@ -74,9 +75,15 @@ export default ShoppingListPanel = () => {
         setSelectedShoppingList(shoplist);
       }
 
+      // console.info("StartProcess...");
       const items = await getAllShoppingItems(user.id, shoplist, true);
-      const masterItems = items.filter((item) => item.master_list === 1);
+      const masterItems = []; //items.filter((item) => item.master_list === 1);
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].master_list === 1) masterItems.push(items[i]);
+      }
+      // console.info("EndProcess...", masterItems.length);
       setMasterItems(masterItems);
+
       const listItems = items.filter((item) => item.master_list === 0);
       setListItems(listItems);
       let totalformatted = 0;

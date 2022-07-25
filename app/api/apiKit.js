@@ -1,7 +1,7 @@
 import axios from "axios";
 import Constants from "expo-constants";
-
 import { logOut } from "../api/logOut";
+import { gotoLogin } from "../tablet/RootNavigation";
 
 // Create axios client, pre-configured with baseURL
 let APIKit = axios.create({
@@ -13,28 +13,18 @@ let APIKit = axios.create({
   timeout: 10000,
 });
 
-// APIKit.interceptors.response.use(function (response) {
-//   return response.data;
-// });
-
 APIKit.interceptors.response.use(
   (response) => {
     //
     return response.data;
   },
   (error) => {
-    // if (error !== undefined) {
-    //   if (error.search("status code 401") >= 0) {
-    //
-    //     //place your reentry code
+    console.info("Error.Response...", error.response.status);
     if (error.response.status === 401) {
+      console.info("401 logging out - gotoLogin");
       logOut();
-
-      window.location = "/SignIn";
+      gotoLogin();
     }
-    //   }
-    // }
-    // return error;
   }
 );
 

@@ -55,8 +55,10 @@ export default ViewRecipePanel = ({
   const loadPanel = async () => {
     try {
       //
+      //console.info("loadPanel..");
       if (recipe.id > 0) {
         const result = await getRecipeById(recipe.id);
+        //console.info("...", result);
         //
         setRecipeCard(result);
         const ingredients = await getIngredients(recipe.id);

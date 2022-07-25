@@ -1,16 +1,18 @@
-//import { StatusBar } from "expo-status-bar";
+import Bugsnag from "@bugsnag/expo";
+Bugsnag.start();
+const ErrorBoundary = Bugsnag.getPlugin("react").createErrorBoundary(React);
 import React, { useEffect, useState } from "react";
 import { StyleSheet, LogBox } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { isTablet } from "react-native-device-detection";
 import AuthContext from "./app/auth/context";
-
 import RecipeContainerNavigator from "./app/navigation/RecipeContainerNavigator";
 import TabletContainerNavigator from "./app/tablet/TabletContainerNavigator";
 import colors from "./app/config/colors";
 import Amplify from "aws-amplify";
 import { setClientToken } from "./app/api/apiKit";
 import authStorage from "./app/auth/storage";
+import { navigationRef } from "./app/tablet/RootNavigation";
 
 Amplify.configure({
   Auth: {
@@ -55,12 +57,19 @@ export default App = () => {
       }
     } catch (e) {}
   };
+
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
-      <NavigationContainer>
-        {isTablet ? <TabletContainerNavigator /> : <RecipeContainerNavigator />}
-      </NavigationContainer>
-    </AuthContext.Provider>
+    <ErrorBoundary>
+      <AuthContext.Provider value={{ user, setUser }}>
+        <NavigationContainer ref={navigationRef}>
+          {isTablet ? (
+            <TabletContainerNavigator />
+          ) : (
+            <RecipeContainerNavigator />
+          )}
+        </NavigationContainer>
+      </AuthContext.Provider>
+    </ErrorBoundary>
   );
 };
 

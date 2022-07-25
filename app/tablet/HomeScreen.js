@@ -72,6 +72,7 @@ export default HomeScreen = ({ navigation }) => {
     setRefreshHome(true);
   };
   const handleRecipeAdded = (recipe) => {
+    console.info("view recipe");
     setRecipe(recipe);
     setPanelType(VIEW_RECIPE);
     setRefreshHome(true);

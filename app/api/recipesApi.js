@@ -4,6 +4,8 @@ import {
   getRecipeImagesNoCategory,
   deleteImagesByRecipe,
 } from "./recipeImagesApi";
+//import { log } from "../utility/logger";
+import Bugsnag from "@bugsnag/expo";
 
 function getUrl(uri) {
   return `/recipes/${uri}`;
@@ -39,15 +41,27 @@ export async function getRecipeById(id) {
 }
 
 export async function saveRecipe(formrecipe) {
+  console.info("Saving...");
   const recipe = await getDBRecipe(formrecipe);
   if (recipe.id) {
     const body = { ...recipe };
     delete body.id;
 
-    return APIKit.put(getUrl(recipe.id), body);
+    try {
+      let result = await APIKit.put(getUrl(recipe.id), body);
+      console.info("result...", result);
+      return formrecipe;
+    } catch (err) {
+      console.info("put...", err);
+    }
   }
   //
-  return APIKit.post("/recipes", recipe);
+  try {
+    let result = APIKit.post("/recipes", recipe);
+    return result;
+  } catch (err) {
+    //   log(err);
+  }
 }
 
 export async function deleteRecipe(id) {

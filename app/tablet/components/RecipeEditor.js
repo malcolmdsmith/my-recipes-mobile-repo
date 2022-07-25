@@ -88,9 +88,7 @@ export default RecipeEditor = ({
   };
 
   const handleSubmit = async (formrecipe) => {
-    //console.log(formrecipe);
     const result = await saveRecipe(formrecipe);
-    //console.log("result...", result);
     onRecipeAdded(result);
 
     if (result) {

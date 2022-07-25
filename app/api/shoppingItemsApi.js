@@ -18,11 +18,14 @@ export function getAllShoppingItems(
   shopping_list_name,
   runClearAndPicked
 ) {
-  return APIKit.get(
+  //console.info("RunQuery...", Date());
+  const result = APIKit.get(
     getUrl(
       `items/all?owner_id=${owner_id}&shopping_list_name=${shopping_list_name}&runClearAndPicked=${runClearAndPicked}&master_list=1`
     )
   );
+  //console.info("QueryComplete...", Date());
+  return result;
 }
 
 export async function getListNames(owner_id) {
