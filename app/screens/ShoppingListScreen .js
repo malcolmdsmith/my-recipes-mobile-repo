@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   Modal,
   ImageBackground,
   TextInput,
+  Text,
 } from "react-native";
 const { forEach } = require("p-iteration");
 
@@ -30,6 +31,7 @@ import {
   saveShoppingList,
   deleteShoppingList,
 } from "../api/shoppingListsApi";
+import { getMealsByUserId } from "../api/recipeListsApi";
 import { getCurrentUser } from "../api/userApi";
 import ActivityIndicator from "../components/ActivityIndicator";
 import colors from "../config/colors";
@@ -37,6 +39,7 @@ import routes from "../navigation/routes";
 import ShoppingItemEditor from "../components/ShoppingItemEditor";
 import ShoppingListHeader from "../components/ShoppingListHeader";
 import ShoppingListTotalPanel from "../components/ShoppingListTotalPanel";
+import MealsListEditor from "../components/MealsListEditor";
 
 export default function ShoppingListScreen({ navigation }) {
   const [item, setItem] = useState({});
@@ -53,8 +56,11 @@ export default function ShoppingListScreen({ navigation }) {
   const [listNames, setListNames] = useState([]);
   const [selectedShoppingList, setSelectedShoppingList] = useState("");
   const [shoplistTextInput, setShopListTextInput] = useState("");
-
-  console.info("dfdfdff");
+  const [mealsEditorVisible, setMealsEditorVisible] = useState(false);
+  const [mealsList, setMealsList] = useState(null);
+  const [mealsYPos, setMealsYPos] = useState(0);
+  const [time, setTime] = useState(null);
+  const scrollViewRef = useRef(null);
 
   useEffect(() => {
     console.info("useEffect...");
@@ -63,27 +69,12 @@ export default function ShoppingListScreen({ navigation }) {
 
   const loadScreen = async () => {
     try {
-      console.info("loadScreen...");
+      console.log("loadScreen...");
 
       setLoading(true);
       const user = await getCurrentUser();
       setUser(user);
-      // if (route.params) {
-      //   const result = await getIngredients(route.params.id);
-      //   await forEach(result, async (ing) => {
-      //     let item = {};
-      //     item.ingredientName = ing.ingredientName;
-      //     item.measure = ing.measure;
-      //     item.qty = ing.qty;
-      //     item.picked = false;
-      //     item.shopping_list_date = new Date().toDateString();
-      //     item.owner_id = user.id;
-      //     item.cost = 0;
-      //     let savedItem = await saveShoppingItem(item);
-      //   });
-      // }
       await loadItems("");
-      //await updateMasterListToShoppingList(selectedShoppingList);
     } catch (e) {
       console.log("ERROR>>>", e);
     } finally {
@@ -94,6 +85,9 @@ export default function ShoppingListScreen({ navigation }) {
   const loadItems = async (shoplist) => {
     try {
       const user = await getCurrentUser();
+      const meals = await getMealsByUserId(user.id);
+      //console.log("meals...", meals);
+      setMealsList(meals);
       const names = await getAllShoppingLists(user.id, 0);
       setListNames(names.map((n) => n.shopping_list_name));
 
@@ -287,11 +281,33 @@ export default function ShoppingListScreen({ navigation }) {
     await loadItems("");
   };
 
+  const handleAddToShoppingList = async (newItem) => {
+    console.info("newItem...", newItem);
+    setModalVisible(false);
+    await createShoppingListItem(newItem);
+    await loadItems(selectedShoppingList);
+  };
+
+  const handleCancelMealsEdit = () => {
+    setMealsEditorVisible(false);
+  };
+  const handleMealsUpdated = (item) => {
+    setMealsList(item);
+    setMealsEditorVisible(false);
+  };
+
+  const showsMealsEditor = async () => {
+    setMealsEditorVisible(true);
+  };
+
   return (
     <>
       <ActivityIndicator visible={loading} />
       <Screen>
-        <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 80 }}
+          ref={scrollViewRef}
+        >
           <View
             style={{
               flexDirection: "row",
@@ -304,7 +320,7 @@ export default function ShoppingListScreen({ navigation }) {
               fontSize={24}
               color={colors.heading}
               icon="shopping-cart"
-              iconSize={26}
+              iconSize={36}
               textAlign="center"
             />
           </View>
@@ -345,10 +361,17 @@ export default function ShoppingListScreen({ navigation }) {
               iconSize={12}
             />
           </View>
+          <Button title="DONE" onPress={handleDone} color="greenDark" />
+          <Button
+            title="Go to Meals List"
+            onPress={() => {
+              scrollViewRef.current?.scrollTo({ y: mealsYPos });
+            }}
+            color="greenDark"
+          />
           <View style={styles.headerContainer}>
             <ShoppingListTotalPanel total={totalMasterCost} />
           </View>
-
           <ShoppingListHeader />
           <View style={styles.itemsContainer}>
             <ShoppingItems
@@ -359,7 +382,36 @@ export default function ShoppingListScreen({ navigation }) {
             />
           </View>
           <Button title="DONE" onPress={handleDone} color="greenDark" />
-
+          <View
+            style={styles.mealsList}
+            onLayout={(event) => {
+              const layout = event.nativeEvent.layout;
+              setMealsYPos(layout.y);
+            }}
+          >
+            <Heading
+              title="MEALS LIST"
+              color={colors.heading}
+              fontSize={22}
+              icon="list"
+              iconSize={24}
+            />
+            <Text>{mealsList && mealsList.recipe_list}</Text>
+          </View>
+          <Button
+            title="Edit Meals"
+            onPress={showsMealsEditor}
+            color="greenMedium"
+          />
+          <View style={styles.button}>
+            <Button
+              title="TOP"
+              onPress={() => {
+                scrollViewRef.current?.scrollTo({ x: 0, y: 0 });
+              }}
+              color="greenDark"
+            />
+          </View>
           <View style={styles.shoppingListContainer}>
             <Heading
               title="SHOPPING LIST"
@@ -434,6 +486,13 @@ export default function ShoppingListScreen({ navigation }) {
               />
             </View>
             <Button title="DONE" onPress={handleDone} color="greenDark" />
+            <Button
+              title="TOP"
+              onPress={() => {
+                scrollViewRef.current?.scrollTo({ x: 0, y: 0 });
+              }}
+              color="greenDark"
+            />
           </View>
           <Modal visible={modalVisible}>
             <ImageBackground
@@ -445,6 +504,21 @@ export default function ShoppingListScreen({ navigation }) {
                   item={item}
                   onCancel={handleCancelItemEdit}
                   onItemUpdated={handleItemUpdated}
+                  onAddToShoppingList={handleAddToShoppingList}
+                />
+              </View>
+            </ImageBackground>
+          </Modal>
+          <Modal visible={mealsEditorVisible}>
+            <ImageBackground
+              style={styles.imageBackground}
+              source={require("../assets/cookbook-design.jpeg")}
+            >
+              <View style={styles.modalContainer}>
+                <MealsListEditor
+                  mealsList={mealsList}
+                  onCancel={handleCancelMealsEdit}
+                  onItemUpdated={handleMealsUpdated}
                 />
               </View>
             </ImageBackground>
@@ -494,6 +568,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
+  button: {
+    marginTop: 25,
+  },
   costListContainer: {
     borderRadius: 25,
     padding: 15,
@@ -532,6 +609,13 @@ const styles = StyleSheet.create({
     zIndex: -1000,
     elevation: -1000,
     marginBottom: 25,
+  },
+  mealsList: {
+    backgroundColor: colors.white,
+    paddingLeft: 20,
+    borderRadius: 20,
+    height: 300,
+    marginTop: 30,
   },
   picker: {
     flexDirection: "row",

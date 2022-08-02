@@ -1,5 +1,5 @@
-import React, { Component } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import React, { Component, useState } from "react";
+import { View, StyleSheet, ScrollView, Alert } from "react-native";
 import * as Yup from "yup";
 
 import {
@@ -32,7 +32,13 @@ const validationSchema = Yup.object().shape({
   master_list: Yup.bool().required().label("Master List"),
 });
 
-export default ShoppingItemEditor = ({ item, onCancel, onItemUpdated }) => {
+export default ShoppingItemEditor = ({
+  item,
+  onCancel,
+  onItemUpdated,
+  onAddToShoppingList,
+}) => {
+  const [newItem, setNewItem] = useState(null);
   const handleCancel = () => {
     onCancel();
   };
@@ -43,6 +49,8 @@ export default ShoppingItemEditor = ({ item, onCancel, onItemUpdated }) => {
 
   const SubmitItem = async (item) => {
     try {
+      let isNew = false;
+      if (item.id === 0) isNew = true;
       if (!item.owner_id) {
         const user = await getCurrentUser();
         item.owner_id = user.id;
@@ -50,9 +58,10 @@ export default ShoppingItemEditor = ({ item, onCancel, onItemUpdated }) => {
       let savedItem = await saveShoppingItem(item);
       if (savedItem.cost > 0) updateCost(savedItem);
 
-      onItemUpdated();
+      if (isNew) onAddToShoppingList(savedItem);
+      else onItemUpdated(savedItem);
     } catch (e) {
-      console.log(e);
+      throw new Error(e);
     }
   };
 
